@@ -16,25 +16,25 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install UV
-      run: curl -LsSf https://astral.sh/uv/install.sh | sh
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "0.5.11"  # Pin uv version for consistency
+        enable-cache: true
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
 
     - name: Install dependencies
-      run: |
-        uv sync --all-extras
+      run: uv sync --all-extras
 
-    - name: Run linting
-      run: |
-        uv run ruff check app tests
+    - name: Run linting with ruff
+      uses: astral-sh/ruff-action@v1
+      with:
+        src: "./app ./tests"
 
     - name: Run type checking
-      run: |
-        uv run pyrefly check
+      run: uv run pyrefly check
 
     - name: Run tests
       run: |
