@@ -1,3 +1,13 @@
+import os
+
+# Configure test environment before importing app modules
+os.environ["ENABLE_TRACING"] = "false"
+os.environ["ENABLE_METRICS"] = "false"
+os.environ["ENABLE_LOGGING"] = "false"
+os.environ["ELASTICSEARCH_URL"] = ""
+os.environ["DEBUG"] = "true"
+
+# ruff: noqa: E402
 import pytest
 import pytest_asyncio
 from unittest.mock import AsyncMock

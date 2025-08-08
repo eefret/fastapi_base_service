@@ -36,7 +36,22 @@ jobs:
     - name: Run type checking
       run: uv run pyrefly check
 
+    - name: Set up test environment
+      run: |
+        # Copy test environment configuration
+        cp .env.test .env
+        # Set additional environment variables for testing
+        echo "TESTING=true" >> .env
+
     - name: Run tests
+      env:
+        # Override observability settings for CI
+        ENABLE_TRACING: "false"
+        ENABLE_METRICS: "false"
+        ENABLE_LOGGING: "false"
+        ELASTICSEARCH_URL: ""
+        OTEL_EXPORTER_OTLP_ENDPOINT: ""
+        DEBUG: "true"
       run: |
         uv run pytest tests/ --cov=app --cov-report=xml
 
@@ -59,11 +74,11 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t user-profile-service:latest .
+        docker build -t fastapi-base-service:latest .
 
     - name: Test Docker image
       run: |
-        docker run --rm -d -p 8000:8000 --name test-container user-profile-service:latest
+        docker run --rm -d -p 8000:8000 --name test-container fastapi-base-service:latest
         sleep 10
         curl -f http://localhost:8000/health || exit 1
         docker stop test-container

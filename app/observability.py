@@ -247,13 +247,20 @@ def setup_logging():
         level=getattr(logging, settings.log_level.upper()),
     )
 
-    # Add Elasticsearch handler if configured
-    if settings.elasticsearch_url and not settings.debug:
-        es_handler = ElasticsearchHandler(
-            settings.elasticsearch_url, settings.elasticsearch_index
-        )
-        es_handler.setLevel(getattr(logging, settings.log_level.upper()))
-        logging.getLogger().addHandler(es_handler)
+    # Add Elasticsearch handler if configured and not in debug mode
+    if (
+        settings.elasticsearch_url
+        and not settings.debug
+        and settings.elasticsearch_url.strip()  # Ensure URL is not empty
+    ):
+        try:
+            es_handler = ElasticsearchHandler(
+                settings.elasticsearch_url, settings.elasticsearch_index
+            )
+            es_handler.setLevel(getattr(logging, settings.log_level.upper()))
+            logging.getLogger().addHandler(es_handler)
+        except Exception as e:
+            print(f"Warning: Could not add Elasticsearch handler: {e}")
 
 
 def get_logger(name: Optional[str] = None):
