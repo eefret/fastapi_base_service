@@ -1,5 +1,13 @@
 # Plantilla de Microservicio FastAPI
 
+[![CI](https://github.com/eefret/fastapi_base_service/workflows/CI/badge.svg)](https://github.com/eefret/fastapi_base_service/actions)
+[![codecov](https://codecov.io/gh/eefret/fastapi_base_service/branch/main/graph/badge.svg)](https://codecov.io/gh/eefret/fastapi_base_service)
+[![Python](https://img.shields.io/badge/python-3.12%20|%203.13-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-00a393.svg?style=flat&logo=FastAPI&logoColor=white)](https://fastapi.tiangolo.com/)
+[![UV](https://img.shields.io/badge/packaged%20with-uv-de5fe4?style=flat&logo=uv&logoColor=white)](https://github.com/astral-sh/uv)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Una plantilla integral de microservicio FastAPI lista para producción, diseñada para desarrolladores que necesitan construir microservicios robustos y testeables con integraciones de APIs externas.
 
 ## 🎯 Lo que Proporciona Esta Plantilla
