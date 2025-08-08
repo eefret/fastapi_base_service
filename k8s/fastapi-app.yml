@@ -1,0 +1,131 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fastapi-config
+  namespace: fastapi-microservice
+data:
+  # Environment variables for the FastAPI application
+  APP_NAME: "FastAPI Microservice"
+  APP_VERSION: "0.1.0"
+  DEBUG: "false"
+  LOG_LEVEL: "INFO"
+
+  # ELK Stack settings
+  ELASTICSEARCH_URL: "http://elasticsearch:9200"
+  ELASTICSEARCH_INDEX: "fastapi-logs-prod"
+
+  # OpenTelemetry settings
+  OTEL_SERVICE_NAME: "fastapi-base-service"
+  OTEL_SERVICE_VERSION: "0.1.0"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+  OTEL_RESOURCE_ATTRIBUTES: "service.namespace=microservices,deployment.environment=production"
+  ENABLE_TRACING: "true"
+  ENABLE_METRICS: "true"
+  ENABLE_LOGGING: "true"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-app
+  namespace: fastapi-microservice
+  labels:
+    app: fastapi-app
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fastapi-app
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: fastapi-app
+        version: v1
+    spec:
+      containers:
+      - name: fastapi-app
+        image: fastapi-base-service:latest
+        imagePullPolicy: Never  # Use local image in Minikube
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: HOST
+          value: "0.0.0.0"
+        - name: PORT
+          value: "8000"
+        envFrom:
+        - configMapRef:
+            name: fastapi-config
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 30
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-app
+  namespace: fastapi-microservice
+  labels:
+    app: fastapi-app
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    name: http
+  selector:
+    app: fastapi-app
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fastapi-app-ingress
+  namespace: fastapi-microservice
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: fastapi-app.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fastapi-app
+            port:
+              number: 8000
+  - host: kibana.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kibana
+            port:
+              number: 5601

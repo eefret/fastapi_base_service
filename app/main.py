@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
-import structlog
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,28 +12,13 @@ from app.models.requests import (
 )
 from app.services.business_service import BusinessService
 from app.middleware.error_handler import error_handler_middleware
+from app.middleware.request_tracing import request_tracing_middleware
+from app.observability import initialize_observability, get_logger
 
+# Initialize observability (OpenTelemetry + structured logging)
+initialize_observability()
 
-# Configure structured logging
-import logging
-
-structlog.configure(
-    processors=[
-        structlog.contextvars.merge_contextvars,
-        structlog.processors.add_log_level,
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.dev.ConsoleRenderer()
-        if settings.debug
-        else structlog.processors.JSONRenderer(),
-    ],
-    wrapper_class=structlog.make_filtering_bound_logger(
-        getattr(logging, settings.log_level.upper(), logging.INFO)
-    ),
-    logger_factory=structlog.PrintLoggerFactory(),
-    cache_logger_on_first_use=True,
-)
-
-logger = structlog.get_logger()
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
@@ -66,9 +50,7 @@ app = FastAPI(
 # Store settings in app state for middleware access
 app.state.settings = settings
 
-# Middleware
-app.middleware("http")(error_handler_middleware)
-
+# Middleware (order matters - first added is executed last)
 app.add_middleware(
     CORSMiddleware,  # type: ignore
     allow_origins=["*"],  # Configure appropriately for production
@@ -76,6 +58,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add custom middleware
+app.middleware("http")(error_handler_middleware)
+app.middleware("http")(request_tracing_middleware)
 
 
 @app.get("/health", response_model=HealthCheckResponse)

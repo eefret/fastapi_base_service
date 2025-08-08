@@ -30,7 +30,7 @@ jobs:
 
     - name: Run linting
       run: |
-        uv run flake8 app tests
+        uv run ruff check app tests
 
     - name: Run type checking
       run: |

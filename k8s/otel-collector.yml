@@ -1,0 +1,165 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: fastapi-microservice
+data:
+  config.yml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+        timeout: 1s
+        send_batch_size: 1024
+
+      resource:
+        attributes:
+          - key: service.namespace
+            value: microservices
+            action: insert
+          - key: deployment.environment
+            value: production
+            action: insert
+          - key: k8s.cluster.name
+            value: fastapi-cluster
+            action: insert
+
+      attributes:
+        actions:
+          - key: container.name
+            action: delete
+          - key: container.id
+            action: delete
+
+    exporters:
+      elasticsearch:
+        endpoints: [http://elasticsearch:9200]
+        traces_index: fastapi-traces
+        logs_index: fastapi-logs
+        metrics_index: fastapi-metrics
+        mapping:
+          mode: raw
+        retry:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 5m
+
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+        namespace: fastapi
+        const_labels:
+          cluster: fastapi-cluster
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [resource, batch]
+          exporters: [elasticsearch]
+
+        metrics:
+          receivers: [otlp]
+          processors: [resource, batch]
+          exporters: [prometheus]
+
+        logs:
+          receivers: [otlp]
+          processors: [resource, attributes, batch]
+          exporters: [elasticsearch]
+
+      extensions: [health_check]
+
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: fastapi-microservice
+  labels:
+    app: otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+      - name: otel-collector
+        image: otel/opentelemetry-collector-contrib:0.89.0
+        command:
+          - /otelcol-contrib
+          - --config=/etc/otel-collector-config.yml
+        ports:
+        - containerPort: 4317
+          name: otlp-grpc
+        - containerPort: 4318
+          name: otlp-http
+        - containerPort: 8889
+          name: prometheus
+        - containerPort: 13133
+          name: health
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: otel-collector-config
+          mountPath: /etc/otel-collector-config.yml
+          subPath: config.yml
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 13133
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 13133
+          initialDelaySeconds: 15
+          timeoutSeconds: 5
+      volumes:
+      - name: otel-collector-config
+        configMap:
+          name: otel-collector-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: fastapi-microservice
+  labels:
+    app: otel-collector
+spec:
+  type: ClusterIP
+  ports:
+  - port: 4317
+    targetPort: 4317
+    name: otlp-grpc
+  - port: 4318
+    targetPort: 4318
+    name: otlp-http
+  - port: 8889
+    targetPort: 8889
+    name: prometheus
+  selector:
+    app: otel-collector

@@ -18,6 +18,17 @@ help:
 	@echo "  docker-run    - Run Docker container"
 	@echo "  change-name   - Change service name throughout project (usage: make change-name name=my-service)"
 	@echo "  check-all     - Run all checks (lint, typecheck, test)"
+	@echo ""
+	@echo "ELK Stack & Observability:"
+	@echo "  elk-up        - Start ELK stack with Docker Compose"
+	@echo "  elk-down      - Stop ELK stack"
+	@echo "  elk-logs      - View ELK stack logs"
+	@echo ""
+	@echo "Kubernetes:"
+	@echo "  k8s-deploy    - Deploy to Minikube with ELK stack"
+	@echo "  k8s-status    - Check Kubernetes deployment status"
+	@echo "  k8s-logs      - View application logs in Kubernetes"
+	@echo "  k8s-cleanup   - Remove Kubernetes deployment"
 
 # Dependency management
 install:
@@ -112,3 +123,26 @@ pre-commit-install:
 
 pre-commit-run:
 	uv run pre-commit run --all-files
+
+# ELK Stack and Observability
+elk-up:
+	docker-compose -f docker-compose.elk.yml up -d
+
+elk-down:
+	docker-compose -f docker-compose.elk.yml down
+
+elk-logs:
+	docker-compose -f docker-compose.elk.yml logs -f
+
+# Kubernetes deployment
+k8s-deploy:
+	cd k8s && ./setup-minikube.sh
+
+k8s-status:
+	kubectl get all -n fastapi-microservice
+
+k8s-logs:
+	kubectl logs -f deployment/fastapi-app -n fastapi-microservice
+
+k8s-cleanup:
+	kubectl delete namespace fastapi-microservice

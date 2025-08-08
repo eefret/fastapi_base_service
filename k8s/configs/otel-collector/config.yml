@@ -1,0 +1,77 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+  resource:
+    attributes:
+      - key: service.namespace
+        value: microservices
+        action: insert
+      - key: deployment.environment
+        value: development
+        action: insert
+
+  attributes:
+    actions:
+      - key: container.name
+        action: delete
+      - key: container.id
+        action: delete
+
+exporters:
+  # Export traces to console for debugging
+  logging:
+    loglevel: debug
+
+  # Export to Elasticsearch
+  elasticsearch:
+    endpoints: ["http://elasticsearch:9200"]
+    traces_index: fastapi-traces
+    logs_index: fastapi-logs
+    metrics_index: fastapi-metrics
+    mapping:
+      mode: raw
+    retry:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 5m
+
+  # Prometheus metrics
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: fastapi
+    const_labels:
+      service: fastapi-base-service
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [resource, batch]
+      exporters: [elasticsearch, logging]
+
+    metrics:
+      receivers: [otlp]
+      processors: [resource, batch]
+      exporters: [prometheus, logging]
+
+    logs:
+      receivers: [otlp]
+      processors: [resource, attributes, batch]
+      exporters: [elasticsearch, logging]
+
+  extensions: [health_check]
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133

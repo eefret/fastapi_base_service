@@ -225,6 +225,7 @@ fastapi_base_service/
 │   ├── main.py                   # FastAPI app setup and routes
 │   ├── config.py                 # Configuration management
 │   ├── dependencies.py           # Dependency injection setup
+│   ├── observability.py          # OpenTelemetry and logging setup
 │   ├── clients/                  # External service clients
 │   │   └── external_client.py    # HTTP client classes
 │   ├── services/                 # Business logic
@@ -232,11 +233,28 @@ fastapi_base_service/
 │   ├── models/                   # Data models
 │   │   └── requests.py           # Request/response models
 │   └── middleware/               # Custom middleware
-│       └── error_handler.py      # Error handling
+│       ├── error_handler.py      # Error handling
+│       └── request_tracing.py    # Request tracing and correlation
 ├── tests/                        # All tests
 │   ├── conftest.py              # Test configuration and fixtures
 │   ├── unit/                    # Unit tests
 │   └── integration/             # API integration tests
+├── k8s/                         # Kubernetes deployment files
+│   ├── configs/                 # Configuration files for services
+│   │   ├── logstash/           # Logstash pipeline and config
+│   │   │   ├── config/
+│   │   │   └── pipeline/
+│   │   └── otel-collector/     # OpenTelemetry Collector config
+│   │       └── config.yml
+│   ├── elasticsearch.yml       # Elasticsearch deployment
+│   ├── fastapi-app.yml         # FastAPI application deployment
+│   ├── kibana.yml              # Kibana deployment
+│   ├── otel-collector.yml      # OpenTelemetry Collector deployment
+│   ├── namespace.yml           # Kubernetes namespace
+│   ├── setup-minikube.sh       # Automated Minikube setup
+│   └── README.md               # Deployment instructions
+├── docker-compose.elk.yml       # ELK stack for development
+├── docker-compose.simple.yml    # Simple FastAPI setup
 ├── .env.example                 # Environment variables template
 ├── pyproject.toml              # Dependencies and tool configuration
 ├── Makefile                    # Development commands
@@ -1070,5 +1088,336 @@ Once you have your microservice working:
 3. **Set up monitoring** and alerts
 4. **Configure CI/CD** using the included GitHub Actions
 5. **Deploy to your cloud provider** using the Docker container
+
+## 📊 ELK Stack & OpenTelemetry Integration
+
+This template includes comprehensive observability with the ELK (Elasticsearch, Logstash, Kibana) stack and OpenTelemetry for distributed tracing, structured logging, and metrics collection.
+
+### 🏗️ Observability Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   FastAPI App   │───▶│ OpenTelemetry   │───▶│  Elasticsearch  │
+│                 │    │   Collector     │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │              ┌─────────────────┐              │
+         └─────────────▶│    Logstash     │──────────────┘
+                        │                 │
+                        └─────────────────┘
+                                 │
+                        ┌─────────────────┐
+                        │     Kibana      │◀── Dashboard & Visualization
+                        │                 │
+                        └─────────────────┘
+```
+
+### 🚀 Observability Features
+
+- **Distributed Tracing**: End-to-end request tracing with OpenTelemetry
+- **Structured Logging**: JSON logs with trace correlation and request IDs
+- **Metrics Collection**: Application performance and business metrics
+- **Real-time Monitoring**: Live dashboards and visualization in Kibana
+- **Log Aggregation**: Centralized logging with powerful search capabilities
+- **Auto-Instrumentation**: Automatic tracing of HTTP requests, external APIs, and database calls
+
+### 📋 Observability Stack
+
+- **OpenTelemetry** - Distributed tracing and metrics collection
+- **Elasticsearch** - Search and analytics engine for logs and traces
+- **Logstash** - Log processing and enrichment pipeline
+- **Kibana** - Visualization and dashboard platform
+- **OpenTelemetry Collector** - Telemetry data processing and export
+
+### 🔧 Quick Start with ELK Stack
+
+#### Option 1: Docker Compose (Development)
+
+1. **Start the complete ELK stack:**
+   ```bash
+   make elk-up
+   ```
+
+2. **Wait for all services to be ready** (2-3 minutes):
+   ```bash
+   # Check service status
+   docker-compose -f docker-compose.elk.yml ps
+
+   # View logs
+   make elk-logs
+   ```
+
+3. **Access your observability platform:**
+   - **FastAPI App**: http://localhost:8000
+   - **API Documentation**: http://localhost:8000/docs
+   - **Kibana Dashboard**: http://localhost:5601
+   - **Elasticsearch API**: http://localhost:9200
+
+#### Option 2: Kubernetes with Minikube (Production-like)
+
+1. **Deploy to Minikube with full ELK stack:**
+   ```bash
+   make k8s-deploy
+   ```
+
+2. **Add local DNS entries** (as shown by setup script):
+   ```bash
+   # Add to /etc/hosts
+   sudo echo "$(minikube ip)    fastapi-app.local" >> /etc/hosts
+   sudo echo "$(minikube ip)    kibana.local" >> /etc/hosts
+   ```
+
+3. **Access services:**
+   - **FastAPI App**: http://fastapi-app.local
+   - **API Documentation**: http://fastapi-app.local/docs
+   - **Kibana Dashboard**: http://kibana.local
+
+### 📊 Understanding Your Observability Data
+
+#### Request Tracing
+
+Every request automatically gets:
+- **Unique Request ID**: For correlation across all logs
+- **Trace ID & Span ID**: For distributed tracing across services
+- **Performance Metrics**: Request duration, status codes, error details
+
+Example structured log entry:
+```json
+{
+  "@timestamp": "2024-01-15T10:30:45.123Z",
+  "level": "INFO",
+  "message": "Request completed",
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "span_id": "00f067aa0ba902b7",
+  "method": "POST",
+  "path": "/process",
+  "status_code": 200,
+  "duration_ms": 45.67,
+  "service": "fastapi-base-service",
+  "version": "0.1.0",
+  "client_ip": "192.168.1.100"
+}
+```
+
+#### Automatic Instrumentation
+
+The application automatically traces:
+- **Incoming HTTP requests** with full request/response details
+- **Outgoing HTTP calls** to external services (httpx, requests)
+- **Business logic spans** with custom attributes
+- **Error tracking** with stack traces and context
+
+### 🔍 Using Kibana for Observability
+
+#### Initial Setup
+
+1. **Access Kibana**: http://localhost:5601 or http://kibana.local
+2. **Create Index Patterns**:
+   - Navigate to Stack Management → Index Patterns
+   - Create pattern: `fastapi-logs-*` (for application logs)
+   - Create pattern: `fastapi-traces-*` (for distributed traces)
+   - Create pattern: `fastapi-metrics-*` (for application metrics)
+
+#### Powerful Search Queries
+
+**Find all errors in the last hour:**
+```
+level:ERROR AND @timestamp:[now-1h TO now]
+```
+
+**Trace a specific request end-to-end:**
+```
+request_id:"550e8400-e29b-41d4-a716-446655440000"
+```
+
+**Identify slow requests (>1000ms):**
+```
+duration_ms:>1000 AND @timestamp:[now-24h TO now]
+```
+
+**Monitor specific API endpoints:**
+```
+path:"/process" AND method:"POST" AND status_code:[400 TO 599]
+```
+
+#### Creating Operational Dashboards
+
+Build comprehensive dashboards with:
+1. **Request Rate Over Time** - Line chart showing RPS
+2. **Response Time Percentiles** - P50, P95, P99 latency trends
+3. **Error Rate Monitoring** - Percentage of failed requests
+4. **Top API Endpoints** - Most frequently called endpoints
+5. **Status Code Distribution** - 2xx/4xx/5xx breakdown
+6. **Geographic Request Distribution** - If client IPs are logged
+
+### 🛠️ Observability Configuration
+
+#### Environment Variables for ELK Integration
+
+```bash
+# ELK Stack Configuration
+ELASTICSEARCH_URL=http://localhost:9200
+ELASTICSEARCH_INDEX=fastapi-logs
+
+# OpenTelemetry Configuration
+OTEL_SERVICE_NAME=fastapi-base-service
+OTEL_SERVICE_VERSION=0.1.0
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+OTEL_RESOURCE_ATTRIBUTES=service.namespace=microservices,deployment.environment=development
+
+# Observability Feature Toggles
+ENABLE_TRACING=true
+ENABLE_METRICS=true
+ENABLE_LOGGING=true
+```
+
+#### Custom Instrumentation in Your Code
+
+Add business-specific tracing to your services:
+
+```python
+from opentelemetry import trace
+from app.observability import get_logger
+
+tracer = trace.get_tracer(__name__)
+logger = get_logger(__name__)
+
+async def process_user_data(user_id: str, data: dict):
+    with tracer.start_as_current_span("process_user_data") as span:
+        # Add business context to spans
+        span.set_attribute("user.id", user_id)
+        span.set_attribute("data.size", len(str(data)))
+
+        # Structured logging with context
+        logger.info("Processing user data",
+                   user_id=user_id,
+                   data_type=type(data).__name__)
+
+        try:
+            # Your business logic here
+            result = await your_business_logic(user_id, data)
+
+            span.set_attribute("processing.status", "success")
+            span.set_attribute("result.items_count", len(result))
+
+            return result
+
+        except Exception as e:
+            span.record_exception(e)
+            span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
+            logger.error("User data processing failed",
+                        user_id=user_id, error=str(e))
+            raise
+```
+
+### 📈 Production Monitoring
+
+#### Key Metrics to Monitor
+
+1. **Request Rate (RPS)**: Requests per second trending
+2. **Error Rate**: Percentage of 4xx/5xx responses
+3. **Response Time**: 95th percentile latency
+4. **Throughput**: Successful requests per minute
+5. **Service Health**: Health check endpoint status
+6. **Resource Usage**: CPU, memory, and disk utilization
+
+#### Setting Up Alerts
+
+Create proactive alerts in Kibana for:
+- **High Error Rate**: >5% errors in 5-minute window
+- **Slow Response Times**: 95th percentile >1000ms
+- **Request Rate Drops**: >50% decrease in traffic
+- **Service Unavailability**: Health check failures
+
+### 🧹 Observability Maintenance
+
+#### Managing Data Retention
+
+Configure Elasticsearch lifecycle management:
+
+```bash
+# Set up 30-day retention policy
+curl -X PUT "localhost:9200/_ilm/policy/fastapi-logs-policy" \
+  -H 'Content-Type: application/json' -d'
+{
+  "policy": {
+    "phases": {
+      "hot": {
+        "actions": {
+          "rollover": {
+            "max_size": "5GB",
+            "max_age": "1d"
+          }
+        }
+      },
+      "delete": {
+        "min_age": "30d"
+      }
+    }
+  }
+}'
+```
+
+#### Observability Commands
+
+```bash
+# ELK Stack Management (Docker Compose)
+make elk-up              # Start ELK stack
+make elk-down            # Stop ELK stack
+make elk-logs            # View all service logs
+
+# Kubernetes ELK Deployment
+make k8s-deploy          # Deploy full stack to Minikube
+make k8s-status          # Check deployment status
+make k8s-logs            # View application logs
+make k8s-cleanup         # Remove all resources
+
+# Health Checks
+curl http://localhost:9200/_cluster/health  # Elasticsearch health
+curl http://localhost:8000/health           # Application health
+```
+
+### 🐛 Troubleshooting Observability
+
+#### Common Issues and Solutions
+
+**Elasticsearch won't start:**
+```bash
+# Increase virtual memory
+sudo sysctl -w vm.max_map_count=262144
+
+# Check available resources
+docker stats
+```
+
+**No logs appearing in Kibana:**
+1. Verify index patterns exist and match your data
+2. Check time range in Kibana (last 15 minutes → last 24 hours)
+3. Verify application is sending logs to Elasticsearch:
+   ```bash
+   curl "localhost:9200/fastapi-logs-*/_search?pretty"
+   ```
+
+**OpenTelemetry traces not appearing:**
+1. Check OpenTelemetry Collector logs:
+   ```bash
+   docker-compose -f docker-compose.elk.yml logs otel-collector
+   ```
+2. Verify OTLP endpoint configuration in application
+3. Ensure traces index pattern is created in Kibana
+
+### 🔒 Security Best Practices
+
+For production deployments:
+
+1. **Enable Elasticsearch Security**: Configure authentication and TLS
+2. **Secure Kibana Access**: Implement proper authentication
+3. **Network Isolation**: Use private networks and VPNs
+4. **Data Encryption**: Enable TLS for all inter-service communication
+5. **Log Sanitization**: Ensure no sensitive data appears in logs
+6. **Access Control**: Implement role-based access to observability data
+
+This comprehensive observability setup gives you enterprise-grade monitoring capabilities with minimal configuration. The ELK stack provides powerful insights into your application's behavior, performance, and health, making it easy to identify and resolve issues quickly.
 
 This template gives you a solid foundation to build upon. Each component is designed to be easily extendable and thoroughly testable. Happy coding! 🚀

@@ -1,0 +1,67 @@
+{
+  "index_patterns": ["fastapi-logs-*"],
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "index.refresh_interval": "5s"
+  },
+  "mappings": {
+    "properties": {
+      "@timestamp": {
+        "type": "date"
+      },
+      "timestamp": {
+        "type": "date"
+      },
+      "level": {
+        "type": "keyword"
+      },
+      "logger": {
+        "type": "keyword"
+      },
+      "message": {
+        "type": "text",
+        "analyzer": "standard"
+      },
+      "service": {
+        "type": "keyword"
+      },
+      "version": {
+        "type": "keyword"
+      },
+      "request_id": {
+        "type": "keyword"
+      },
+      "trace_id": {
+        "type": "keyword"
+      },
+      "span_id": {
+        "type": "keyword"
+      },
+      "method": {
+        "type": "keyword"
+      },
+      "path": {
+        "type": "keyword"
+      },
+      "status_code": {
+        "type": "integer"
+      },
+      "duration_ms": {
+        "type": "float"
+      },
+      "error": {
+        "type": "text"
+      },
+      "exception": {
+        "type": "text"
+      },
+      "client_ip": {
+        "type": "ip"
+      },
+      "user_agent": {
+        "type": "text"
+      }
+    }
+  }
+}

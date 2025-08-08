@@ -13,6 +13,15 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "structlog>=23.2.0",
     "dependency-injector>=4.41.0",
+    # OpenTelemetry and observability
+    "opentelemetry-api>=1.21.0",
+    "opentelemetry-sdk>=1.21.0",
+    "opentelemetry-instrumentation-fastapi>=0.42b0",
+    "opentelemetry-instrumentation-httpx>=0.42b0",
+    "opentelemetry-instrumentation-requests>=0.42b0",
+    "opentelemetry-exporter-otlp>=1.21.0",
+    "opentelemetry-instrumentation-logging>=0.42b0",
+    "elasticsearch>=8.0.0",
 ]
 
 [project.optional-dependencies]
