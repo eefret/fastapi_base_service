@@ -9,7 +9,9 @@ repos:
       - id: check-json
       - id: check-merge-conflict
 
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.0
     hooks:
-      - id: flake8
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format

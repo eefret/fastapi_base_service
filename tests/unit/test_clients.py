@@ -16,8 +16,7 @@ async def test_external_service_a_get_data():
     mock_http_client.request.return_value = mock_response
 
     client = ExternalServiceAClient(
-        http_client=mock_http_client,
-        base_url="https://service-a.example.com"
+        http_client=mock_http_client, base_url="https://service-a.example.com"
     )
 
     # Act
@@ -26,9 +25,7 @@ async def test_external_service_a_get_data():
     # Assert
     assert result == {"result": "test_data"}
     mock_http_client.request.assert_called_once_with(
-        "GET",
-        "https://service-a.example.com/api/data",
-        params={"query": "test_query"}
+        "GET", "https://service-a.example.com/api/data", params={"query": "test_query"}
     )
 
 
@@ -43,8 +40,7 @@ async def test_external_service_a_process_item():
     mock_http_client.request.return_value = mock_response
 
     client = ExternalServiceAClient(
-        http_client=mock_http_client,
-        base_url="https://service-a.example.com"
+        http_client=mock_http_client, base_url="https://service-a.example.com"
     )
 
     item_data = {"item": "test_item"}
@@ -55,9 +51,7 @@ async def test_external_service_a_process_item():
     # Assert
     assert result == {"processed": True}
     mock_http_client.request.assert_called_once_with(
-        "POST",
-        "https://service-a.example.com/api/process",
-        json=item_data
+        "POST", "https://service-a.example.com/api/process", json=item_data
     )
 
 
@@ -72,8 +66,7 @@ async def test_external_service_b_fetch_metadata():
     mock_http_client.request.return_value = mock_response
 
     client = ExternalServiceBClient(
-        http_client=mock_http_client,
-        base_url="https://service-b.example.com"
+        http_client=mock_http_client, base_url="https://service-b.example.com"
     )
 
     # Act
@@ -82,8 +75,7 @@ async def test_external_service_b_fetch_metadata():
     # Assert
     assert result == {"metadata": "test_metadata"}
     mock_http_client.request.assert_called_once_with(
-        "GET",
-        "https://service-b.example.com/api/items/item123/metadata"
+        "GET", "https://service-b.example.com/api/items/item123/metadata"
     )
 
 
@@ -95,8 +87,7 @@ async def test_client_http_error_handling():
     mock_http_client.request.side_effect = httpx.HTTPError("Connection failed")
 
     client = ExternalServiceAClient(
-        http_client=mock_http_client,
-        base_url="https://service-a.example.com"
+        http_client=mock_http_client, base_url="https://service-a.example.com"
     )
 
     # Act & Assert

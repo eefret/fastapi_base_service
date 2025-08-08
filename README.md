@@ -78,11 +78,11 @@ This template gives you everything needed to build a microservice that:
   - Better integration with pytest fixtures
   - AsyncMock support for async functions
 
-- **flake8** - Code linter chosen for:
-  - Combines multiple tools (pycodestyle, pyflakes, mccabe)
-  - Configurable rules
-  - Good balance of strictness vs practicality
-  - Wide adoption in Python community
+- **ruff** - Ultra-fast Python linter and formatter chosen for:
+  - Written in Rust for maximum performance (10-100x faster than flake8)
+  - All-in-one tool combining linting and formatting
+  - Compatible with existing Python tools and rules
+  - Modern replacement for flake8, black, and other tools
 
 ### Logging & Observability
 - **structlog** - Structured logging chosen over standard logging because:
@@ -749,7 +749,7 @@ make change-name   # Change service name throughout project
 ### Code Quality Tools
 
 - **pyrefly** - Catches type errors before runtime with blazing speed
-- **flake8** - Ensures consistent code style
+- **ruff** - Ensures consistent code style and formatting
 - **pytest** - Comprehensive test coverage
 
 ### Pre-commit Hooks

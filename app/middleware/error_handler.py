@@ -53,7 +53,9 @@ async def error_handler_middleware(request: Request, call_next: Callable) -> Res
             content={
                 "error": "Internal server error",
                 "request_id": request_id,
-                "message": str(e) if request.app.state.settings.debug else "Something went wrong",
+                "message": str(e)
+                if request.app.state.settings.debug
+                else "Something went wrong",
             },
             headers={"X-Request-ID": request_id},
         )

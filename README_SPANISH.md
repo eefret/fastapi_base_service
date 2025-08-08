@@ -78,11 +78,11 @@ Esta plantilla te da todo lo necesario para construir un microservicio que:
   - Mejor integración con fixtures de pytest
   - Soporte AsyncMock para funciones async
 
-- **flake8** - Linter de código elegido por:
-  - Combina múltiples herramientas (pycodestyle, pyflakes, mccabe)
-  - Reglas configurables
-  - Buen balance entre rigurosidad y practicidad
-  - Adopción amplia en la comunidad Python
+- **ruff** - Linter y formateador Python ultra-rápido elegido por:
+  - Escrito en Rust para máximo rendimiento (10-100x más rápido que flake8)
+  - Herramienta todo-en-uno que combina linting y formateo
+  - Compatible con herramientas y reglas Python existentes
+  - Reemplazo moderno para flake8, black y otras herramientas
 
 ### Logging y Observabilidad
 - **structlog** - Logging estructurado elegido sobre logging estándar porque:
@@ -749,7 +749,7 @@ make change-name   # Cambiar nombre de servicio en todo el proyecto
 ### Herramientas de Calidad de Código
 
 - **pyrefly** - Detecta errores de tipo antes del tiempo de ejecución con velocidad ultrarrápida
-- **flake8** - Asegura estilo de código consistente
+- **ruff** - Asegura estilo de código consistente y formateo
 - **pytest** - Cobertura de test comprehensiva
 
 ### Hooks de Pre-commit

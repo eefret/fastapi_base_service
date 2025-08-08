@@ -1,7 +1,7 @@
 import asyncio
 import time
 import structlog
-from typing import Tuple, cast, Any
+from typing import Tuple, cast
 
 from app.clients.external_client import ExternalServiceAClient, ExternalServiceBClient
 
@@ -20,24 +20,19 @@ class BusinessService:
     async def process_data(self, input_data: str, options: dict[str, str]) -> dict:
         start_time = time.time()
 
-        logger.info(
-            "Starting data processing",
-            input_data=input_data,
-            options=options
-        )
+        logger.info("Starting data processing", input_data=input_data, options=options)
 
         # Call both external services concurrently
         service_a_data, service_b_data = await self._fetch_external_data(input_data)
 
         # Business logic - combine and process the data
-        processed_result = self._combine_data(input_data, service_a_data, service_b_data)
+        processed_result = self._combine_data(
+            input_data, service_a_data, service_b_data
+        )
 
         processing_time = (time.time() - start_time) * 1000
 
-        logger.info(
-            "Data processing completed",
-            processing_time_ms=processing_time
-        )
+        logger.info("Data processing completed", processing_time_ms=processing_time)
 
         return {
             "processed_data": processed_result,
@@ -57,12 +52,20 @@ class BusinessService:
 
         # Handle exceptions
         service_a_result = results[0]
-        service_a_data: dict = cast(dict, service_a_result) if not isinstance(service_a_result, Exception) else {}
+        service_a_data: dict = (
+            cast(dict, service_a_result)
+            if not isinstance(service_a_result, Exception)
+            else {}
+        )
 
         service_b_data: dict = {}
         if len(results) > 1:
             service_b_result = results[1]
-            service_b_data = cast(dict, service_b_result) if not isinstance(service_b_result, Exception) else {}
+            service_b_data = (
+                cast(dict, service_b_result)
+                if not isinstance(service_b_result, Exception)
+                else {}
+            )
 
         if isinstance(service_a_result, Exception):
             logger.warning("Service A call failed", error=str(service_a_result))
@@ -72,7 +75,9 @@ class BusinessService:
 
         return service_a_data, service_b_data
 
-    def _combine_data(self, input_data: str, service_a_data: dict, service_b_data: dict) -> str:
+    def _combine_data(
+        self, input_data: str, service_a_data: dict, service_b_data: dict
+    ) -> str:
         """Business logic to combine data from different sources."""
         combined = {
             "input": input_data,

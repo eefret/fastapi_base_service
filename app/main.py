@@ -6,7 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.dependencies import container, get_business_service
-from app.models.requests import HealthCheckResponse, ProcessDataRequest, ProcessDataResponse
+from app.models.requests import (
+    HealthCheckResponse,
+    ProcessDataRequest,
+    ProcessDataResponse,
+)
 from app.services.business_service import BusinessService
 from app.middleware.error_handler import error_handler_middleware
 
@@ -19,7 +23,9 @@ structlog.configure(
         structlog.contextvars.merge_contextvars,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
-        structlog.dev.ConsoleRenderer() if settings.debug else structlog.processors.JSONRenderer(),
+        structlog.dev.ConsoleRenderer()
+        if settings.debug
+        else structlog.processors.JSONRenderer(),
     ],
     wrapper_class=structlog.make_filtering_bound_logger(
         getattr(logging, settings.log_level.upper(), logging.INFO)
@@ -34,7 +40,9 @@ logger = structlog.get_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("Starting up service", app_name=settings.app_name, version=settings.app_version)
+    logger.info(
+        "Starting up service", app_name=settings.app_name, version=settings.app_version
+    )
 
     # Wire the dependency injection container
     container.wire(modules=[__name__])

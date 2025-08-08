@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import AsyncMock
 
 from app.services.business_service import BusinessService
 
@@ -53,7 +52,9 @@ async def test_process_data_with_service_a_failure(
     options = {}
 
     # Simulate Service A failure
-    mock_external_service_a_client.get_data.side_effect = Exception("Service A unavailable")
+    mock_external_service_a_client.get_data.side_effect = Exception(
+        "Service A unavailable"
+    )
     mock_external_service_b_client.fetch_metadata.return_value = {"meta": "data_from_b"}
 
     # Act
@@ -86,8 +87,12 @@ async def test_process_data_with_both_services_failing(
     options = {}
 
     # Simulate both services failing
-    mock_external_service_a_client.get_data.side_effect = Exception("Service A unavailable")
-    mock_external_service_b_client.fetch_metadata.side_effect = Exception("Service B unavailable")
+    mock_external_service_a_client.get_data.side_effect = Exception(
+        "Service A unavailable"
+    )
+    mock_external_service_b_client.fetch_metadata.side_effect = Exception(
+        "Service B unavailable"
+    )
 
     # Act
     result = await business_service.process_data(input_data, options)

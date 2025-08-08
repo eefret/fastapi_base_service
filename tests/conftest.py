@@ -1,11 +1,10 @@
 import pytest
 import pytest_asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 from fastapi.testclient import TestClient
 import httpx
 
 from app.main import app
-from app.dependencies import container
 from app.clients.external_client import ExternalServiceAClient, ExternalServiceBClient
 from app.services.business_service import BusinessService
 
@@ -43,8 +42,7 @@ async def mock_external_service_b_client():
 
 @pytest_asyncio.fixture
 async def business_service_with_mocks(
-    mock_external_service_a_client,
-    mock_external_service_b_client
+    mock_external_service_a_client, mock_external_service_b_client
 ):
     """Create a BusinessService with mocked dependencies."""
     return BusinessService(
@@ -56,6 +54,7 @@ async def business_service_with_mocks(
 @pytest.fixture
 def override_dependencies():
     """Fixture to override FastAPI dependencies for testing."""
+
     def _override(overrides: dict):
         for dependency, mock in overrides.items():
             app.dependency_overrides[dependency] = lambda m=mock: m

@@ -6,9 +6,10 @@ help:
 	@echo "  install       - Install production dependencies"
 	@echo "  dev-install   - Install development dependencies"
 	@echo "  test          - Run tests"
-	@echo "  lint          - Run flake8 linter"
+	@echo "  lint          - Run ruff linter"
+	@echo "  lint-fix      - Run ruff linter with auto-fix"
 	@echo "  typecheck     - Run pyrefly type checker"
-	@echo "  format        - Format code (placeholder - add black if desired)"
+	@echo "  format        - Format code with ruff"
 	@echo "  run           - Run application in production mode"
 	@echo "  dev           - Run application in development mode with auto-reload"
 	@echo "  docs          - Open FastAPI automatic documentation in browser"
@@ -34,14 +35,16 @@ test-cov:
 
 # Code quality
 lint:
-	uv run flake8 app tests
+	uv run ruff check app tests
+
+lint-fix:
+	uv run ruff check --fix app tests
 
 typecheck:
 	uv run pyrefly check
 
 format:
-	@echo "Format target ready - add black or ruff if desired"
-	@echo "Example: uv run black app tests"
+	uv run ruff format app tests
 
 # Running the application
 run:

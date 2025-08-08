@@ -9,7 +9,9 @@ class HealthCheckResponse(BaseModel):
 
 class ProcessDataRequest(BaseModel):
     input_data: str = Field(description="Input data to process")
-    options: dict[str, str] = Field(default_factory=dict, description="Processing options")
+    options: dict[str, str] = Field(
+        default_factory=dict, description="Processing options"
+    )
 
 
 class ProcessDataResponse(BaseModel):
