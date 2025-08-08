@@ -40,8 +40,6 @@ jobs:
       run: |
         # Copy test environment configuration
         cp .env.test .env
-        # Set additional environment variables for testing
-        echo "TESTING=true" >> .env
 
     - name: Run tests
       env:
