@@ -10,6 +10,8 @@
 
 A comprehensive, production-ready FastAPI microservice template designed for developers to build robust, testable microservices with external API integrations.
 
+Made with ❤️ by [Chris](https://github.com/eefret) for my muse [Ana](https://github.com/LlanoAna)
+
 ## 🎯 What This Template Provides
 
 This template gives you everything needed to build a microservice that:

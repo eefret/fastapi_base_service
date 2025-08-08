@@ -10,6 +10,8 @@
 
 Una plantilla integral de microservicio FastAPI lista para producción, diseñada para desarrolladores que necesitan construir microservicios robustos y testeables con integraciones de APIs externas.
 
+Hecho con ❤️ por [Chris](https://github.com/eefret) para mi musa [Ana](https://github.com/LlanoAna)
+
 ## 🎯 Lo que Proporciona Esta Plantilla
 
 Esta plantilla te da todo lo necesario para construir un microservicio que:
